@@ -11,8 +11,8 @@ package ruleBase;
  */
 public class RuleBase {
     
-    public static int[] getBanksForCreditScore(int creditScore){
-        int[] result = {1,2};
+    public static String[] getBanksForCreditScore(long creditScore){
+        String[] result = {"translator1Channel","translator2Channel"};
         return result;
     }
     
