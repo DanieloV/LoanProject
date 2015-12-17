@@ -13,6 +13,7 @@ import com.rabbitmq.client.QueueingConsumer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+
 /**
  *
  * @author Daniel
@@ -59,12 +60,18 @@ public class Translator1 {
             long ssnLong = Long.parseLong(ssn);
             obj.put("ssn", ssnLong);
                         
-            System.out.println("[x] Sending '" + obj.toJSONString() + "'");
+            org.json.JSONObject objsend = new org.json.JSONObject();
+            objsend.put("ssn", obj.get("ssn"));
+            objsend.put("creditScore", obj.get("creditScore"));
+            objsend.put("loanAmount", obj.get("loanAmount"));
+            objsend.put("loanDuration", obj.get("loanDuration"));
             
-            BasicProperties bp = new BasicProperties.Builder()
-                        .replyTo("normalizerChannel")
-                        .build();
-            bankChannel.basicPublish(EXCHANGE_NAME, "", bp, obj.toJSONString().getBytes());
+            System.out.println("[x] Sending '" + objsend.toString() + "'");
+            
+            BasicProperties.Builder bp = new BasicProperties.Builder()
+                        .replyTo("normalizerChannelWWW");
+                    
+            bankChannel.basicPublish(EXCHANGE_NAME, "", bp.build(), objsend.toString().getBytes());
 //            sendChannel.basicPublish("", SENDING_QUEUE, null, obj.toJSONString().getBytes());
         }
     }

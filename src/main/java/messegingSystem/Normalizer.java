@@ -17,7 +17,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class Normalizer {
     
-    private final static String RECEIVING_QUEUE = "normalizerChannel";
+    private final static String RECEIVING_QUEUE = "normalizerChannelWWW";
 //    private final static String EXCHANGE_NAME = "cphbusiness.bankJSON";
     
     public static void main(String[] args) throws Exception {
@@ -36,8 +36,9 @@ public class Normalizer {
         Connection bankConnection = connfac.newConnection();
         Channel bankChannel = bankConnection.createChannel();
 
-//        bankChannel.exchangeDeclare(EXCHANGE_NAME, "direct");
-        bankChannel.queueDeclare(RECEIVING_QUEUE, false, false, false, null);
+        bankChannel.exchangeDeclare("somethingTest", "fanout");
+        bankChannel.queueBind(RECEIVING_QUEUE, "somethingTest", "");
+//        bankChannel.queueDeclare(RECEIVING_QUEUE, false, false, false, null);
         
         //to be deleted
         System.out.println(" [*] Waiting for messages. To exit press CTRL-C");
