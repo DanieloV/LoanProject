@@ -10,6 +10,12 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import java.io.StringWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -17,11 +23,11 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Daniel
  */
-public class Translator1 {
+public class Translator2 {
 
-    private final static String RECEIVING_QUEUE = "bank1Queue";
-    private final static String EXCHANGE_NAME = "cphbusiness.bankJSON";
-    private final static String REPLYTO_QUEUE = "normalizer1QUEUEWWW";
+    private final static String RECEIVING_QUEUE = "bank2Queue";
+    private final static String EXCHANGE_NAME = "cphbusiness.bankXML";
+    private final static String REPLYTO_QUEUE = "normalizer2QUEUEWWW";
 
     public static void main(String[] args) throws Exception {
 
@@ -61,12 +67,51 @@ public class Translator1 {
             long ssnLong = Long.parseLong(ssn);
             obj.put("ssn", ssnLong);
 
-            System.out.println("[x] Sending '" + obj.toString() + "'");
+            StringWriter stringWriter = new StringWriter();
+
+            XMLOutputFactory xMLOutputFactory = XMLOutputFactory.newInstance();
+            XMLStreamWriter xMLStreamWriter = xMLOutputFactory.createXMLStreamWriter(stringWriter);
+
+            xMLStreamWriter.writeStartDocument();
+            xMLStreamWriter.writeStartElement("LoanRequest");
+
+            xMLStreamWriter.writeStartElement("ssn");
+            xMLStreamWriter.writeCharacters("" + ssnLong);
+            xMLStreamWriter.writeEndElement();
+
+            xMLStreamWriter.writeStartElement("creditScore");
+            xMLStreamWriter.writeCharacters("" + obj.get("creditScore"));
+            xMLStreamWriter.writeEndElement();
+
+            xMLStreamWriter.writeStartElement("loanAmount");
+            xMLStreamWriter.writeCharacters("" + obj.get("loanAmount"));
+            xMLStreamWriter.writeEndElement();
+
+            xMLStreamWriter.writeStartElement("loanDuration");
+            Long loanDuration = (Long) obj.get("loanDuration");
+            Date date = new Date(70, loanDuration.intValue(), 1);
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S z");
+            xMLStreamWriter.writeCharacters(df.format(date));
+            xMLStreamWriter.writeEndElement();
+
+            xMLStreamWriter.writeEndElement();
+            xMLStreamWriter.writeEndDocument();
+
+            xMLStreamWriter.flush();
+            xMLStreamWriter.close();
+
+            String xmlString = stringWriter.getBuffer().toString();
+
+            stringWriter.close();
+
+            System.out.println(xmlString);
+
+            System.out.println("[x] Sending '" + xmlString + "'");
 
             BasicProperties.Builder bp = new BasicProperties.Builder()
                     .replyTo(REPLYTO_QUEUE);
 
-            bankChannel.basicPublish(EXCHANGE_NAME, "", bp.build(), obj.toString().getBytes());
+            bankChannel.basicPublish(EXCHANGE_NAME, "", bp.build(), xmlString.getBytes());
 //            sendChannel.basicPublish("", SENDING_QUEUE, null, obj.toJSONString().getBytes());
         }
     }

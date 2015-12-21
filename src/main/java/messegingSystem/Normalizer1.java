@@ -9,7 +9,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
-import creditBureau.CreditBureau;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -17,41 +16,47 @@ import org.json.simple.parser.JSONParser;
  *
  * @author Daniel
  */
-public class CreditBureauMessageComponent {
+public class Normalizer1 {
     
-    private final static String RECEIVING_QUEUE = "bureauChannel";
-    private final static String SENDING_QUEUE = "ruleBaseChannel";
+    private final static String RECEIVING_QUEUE = "normalizer1QUEUEWWW";
+    private final static String SENDING_QUEUE = "aggregatorQueue";
     
     public static void main(String[] args) throws Exception {
         
-        JSONParser jsonParster = new JSONParser();
+        JSONParser jsonParser = new JSONParser();
         
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
-        Channel recvChannel = connection.createChannel();
         Channel sendChannel = connection.createChannel();
         
-        recvChannel.queueDeclare(RECEIVING_QUEUE, false, false, false, null);
+        ConnectionFactory connfac = new ConnectionFactory();
+        connfac.setHost("datdb.cphbusiness.dk");
+        connfac.setUsername("student");
+        connfac.setPassword("cph");
+        Connection bankConnection = connfac.newConnection();
+        Channel bankChannel = bankConnection.createChannel();
+
+        bankChannel.queueDeclare(RECEIVING_QUEUE, false, false, false, null);
         sendChannel.queueDeclare(SENDING_QUEUE, false, false, false, null);
         
         //to be deleted
         System.out.println(" [*] Waiting for messages. To exit press CTRL-C");
         
-        QueueingConsumer consumer = new QueueingConsumer(recvChannel);
-        recvChannel.basicConsume(RECEIVING_QUEUE, true, consumer);
+        QueueingConsumer consumer = new QueueingConsumer(bankChannel);
+        bankChannel.basicConsume(RECEIVING_QUEUE, true, consumer);
+        
+        int counter = 0;
         
         while(true){
             QueueingConsumer.Delivery delivery = consumer.nextDelivery();
             String message = new String(delivery.getBody());
             
             //to be deleted after testing
-            System.out.println(" [x] Received '" + message + "'");
+            System.out.println(" ["+ counter++ +"] Received '" + message + "'");
             
-            JSONObject obj = (JSONObject)jsonParster.parse(message);
-            String ssn = (String) obj.get("ssn");
-            int result = CreditBureau.getScore(ssn);
-            obj.put("creditScore", 700);
+            JSONObject obj = (JSONObject)jsonParser.parse(message);
+            obj.put("bank", "Bank1");
             
             sendChannel.basicPublish("", SENDING_QUEUE, null, obj.toJSONString().getBytes());
         }

@@ -1,1 +1,5 @@
-- create rest of messaging components
+- make rabbitbank with multiple queues 
+- handle when no bank is good enough
+
+- make the system a webservice
+- create test client for the system

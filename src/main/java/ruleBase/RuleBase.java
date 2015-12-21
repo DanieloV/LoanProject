@@ -11,9 +11,10 @@ package ruleBase;
  */
 public class RuleBase {
     
-    public static String[] getBanksForCreditScore(long creditScore){
-        String[] result = {"translator1Channel","translator2Channel"};
-        return result;
+    public static java.util.List<java.lang.Short> getBanksForCreditScore(int creditScore) {
+        RuleBaseWS_Service service = new RuleBaseWS_Service();
+        RuleBaseWS port = service.getRuleBaseWSPort();
+        return port.getBankList(creditScore);
     }
     
 }
