@@ -82,7 +82,7 @@ public class Agreggator {
                             Logger.getLogger(Agreggator.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                }, 5000);
+                }, 90000);
             }
         }
     }
